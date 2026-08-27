@@ -1,0 +1,7 @@
+pandas
+scikit-learn
+google-generativeai
+groq
+bert-score
+rouge-score
+tqdm
