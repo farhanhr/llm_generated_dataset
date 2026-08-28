@@ -11,10 +11,8 @@ class FakeNewsClassifier:
 
     def train_and_evaluate(self, df):
         """Melatih model klasifikasi dan mengembalikan metrik performa."""
-        # Ekstraksi fitur teks
         X = self.vectorizer.fit_transform(df['clean_text']).toarray()
         
-        # Asumsi kolom label bernama 'Kategori' dengan isi 'ham' dan 'spam'
         y = df['Kategori'].map({'ham': 0, 'spam': 1}).values
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
