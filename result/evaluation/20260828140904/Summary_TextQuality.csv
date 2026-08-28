@@ -1,0 +1,3 @@
+"Nama_file","Model","Teknik","Test","BERT_score","ROUGE_score"
+"LLaMA_few-shot_TextQuality.csv","LLaMA","few-shot","TextQuality",0.8235559149901626,0.6275426309432118
+"LLaMA_role-prompting_TextQuality.csv","LLaMA","role-prompting","TextQuality",0.7509943401564289,0.40083014883346485

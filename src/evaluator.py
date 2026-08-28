@@ -2,6 +2,7 @@ import pandas as pd
 from bert_score import score
 from rouge_score import rouge_scorer
 import csv
+import os
 
 class TextEvaluator:
     def __init__(self):
@@ -21,14 +22,10 @@ class TextEvaluator:
         return F1.tolist()
 
     def evaluate_dataframe(self, df_synthetic, original_texts):
-        """
-        Fungsi fleksibel untuk menilai seluruh DataFrame sintetis.
-        Mengembalikan: (DataFrame dengan kolom skor, Dictionary rata-rata skor)
-        """
+        """Menilai seluruh DataFrame sintetis dan mengembalikan DataFrame berskor beserta rata-ratanya."""
         df = df_synthetic.copy()
         
         df['ROUGE_L'] = [self.get_rouge_score(orig, cand) for orig, cand in zip(original_texts, df['Pesan'])]
-        
         df['BERT_Score'] = self.get_bertscore_batch(original_texts, df['Pesan'].tolist())
         
         avg_scores = {
@@ -39,12 +36,9 @@ class TextEvaluator:
         return df, avg_scores
 
     def save_evaluation_results(self, df_scored, avg_scores, model, technique, test_name, timestamp_dir):
-        """Menyimpan format CSV Per-Baris dan menambahkan ke Log Summary Rata-rata."""
-        import os
+        """Menyimpan CSV Per-Baris dan menambahkan ke Log Summary Rata-rata sesuai format yang diminta."""
         os.makedirs(timestamp_dir, exist_ok=True)
         
-        # Format 1: Skor Per Baris
-        # Nama file contoh: LLaMA_zero-shot_TextQuality.csv
         file_name = f"{model}_{technique}_{test_name}.csv"
         file_path = os.path.join(timestamp_dir, file_name)
         
@@ -52,13 +46,11 @@ class TextEvaluator:
             file_path, index=False, quoting=csv.QUOTE_NONNUMERIC
         )
         
-        # Format 2: Menambahkan ke file Summary Rata-rata
         summary_path = os.path.join(timestamp_dir, "Summary_TextQuality.csv")
         summary_data = pd.DataFrame([{
             'Nama_file': file_name,
             'Model': model,
             'Teknik': technique,
-            'Test': test_name,
             'BERT_score': avg_scores['Avg_BERT_Score'],
             'ROUGE_score': avg_scores['Avg_ROUGE_L']
         }])
