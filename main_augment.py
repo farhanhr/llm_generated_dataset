@@ -8,18 +8,20 @@ warnings.filterwarnings('ignore')
 from src.data_loader import SMSDataLoader
 from src.augmenter import TextAugmenter
 
+
 GEMINI_API_KEY = "DUMMY_KEY"
 OPENAI_API_KEY = "DUMMY_KEY"
 DATA_PATH = "data/raw/sms_spam_indo.csv"
 
+# Jumlah parafrase yang dihasilkan
 NUM_VARIATIONS = 2  
 
 LLMS_TO_RUN = ['LLaMA'] 
 TECHNIQUES_TO_RUN = ['zero-shot', 'few-shot', 'role-prompting']
 
 def create_directory_structure(base_dir):
-    """Membuat arsitektur folder baru sesuai permintaan."""
-    folders = ['synthetic', 'merged', 'txt_logs']
+
+    folders = ['synthetic', 'merged', 'augmented_log']
     paths = {}
     for f in folders:
         path = os.path.join(base_dir, f)
@@ -28,7 +30,6 @@ def create_directory_structure(base_dir):
     return paths
 
 def save_txt_log(original_text, synthetic_texts, filepath):
-    """Menyimpan log txt histori parafrase."""
     with open(filepath, 'a', encoding='utf-8') as f:
         f.write(f'Original : "{original_text}"\n')
         f.write('Parafrase :\n')
@@ -41,7 +42,7 @@ def main():
     loader = SMSDataLoader(DATA_PATH)
     normal_df, spam_df = loader.process()
     
-    spam_texts = spam_df['Pesan'].tolist() 
+    spam_texts = spam_df['Pesan'].head(3).tolist() 
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
     
@@ -55,44 +56,49 @@ def main():
             print(f"\n---> Memproses: [{llm}] | [{technique}] | Multiplier: {NUM_VARIATIONS}x")
             
             synthetic_data = []
-            txt_log_path = os.path.join(dirs['txt_logs'], f"log_{llm}_{technique}.txt")
+            log_csv_data = [] 
+            
+            txt_log_path = os.path.join(dirs['augmented_log'], f"log_{llm}_{technique}.txt")
             
             for original_text in tqdm(spam_texts, desc=f"{llm} - {technique}"):
                 prompt = augmenter.get_prompt(technique, original_text)
                 
                 current_paraphrases = []
-
-                for _ in range(NUM_VARIATIONS):
-                    if llm == 'Gemini':
-                        syn_text = augmenter.augment_with_gemini(prompt)
-                    elif llm == 'GPT':
-                        syn_text = augmenter.augment_with_gpt(prompt)
-                    elif llm == 'LLaMA':
-                        syn_text = augmenter.augment_with_llama(prompt)
+                row_log = {'original': original_text}
+                
+                for i in range(NUM_VARIATIONS):
+                    if llm == 'Gemini': syn_text = augmenter.augment_with_gemini(prompt)
+                    elif llm == 'GPT': syn_text = augmenter.augment_with_gpt(prompt)
+                    elif llm == 'LLaMA': syn_text = augmenter.augment_with_llama(prompt)
+                    else: syn_text = ""
                     
                     if syn_text and syn_text not in current_paraphrases:
                         current_paraphrases.append(syn_text)
-                        synthetic_data.append({
-                            'Kategori': 'spam',
-                            'Pesan': syn_text
-                        })
+                        synthetic_data.append({'Kategori': 'spam', 'Pesan': syn_text})
+                        row_log[f'parafrase_{i+1}'] = syn_text
+                    else:
+                        row_log[f'parafrase_{i+1}'] = "" # Kosongkan jika gagal generate
                 
                 if current_paraphrases:
                     save_txt_log(original_text, current_paraphrases, txt_log_path)
+                    log_csv_data.append(row_log)
+            
+            df_log_csv = pd.DataFrame(log_csv_data)
+            if not df_log_csv.empty:
+                file_log_csv = os.path.join(dirs['augmented_log'], f"log_{llm}_{technique}.csv")
+                df_log_csv.to_csv(file_log_csv, index=False, quoting=1)
             
             synthetic_df = pd.DataFrame(synthetic_data, columns=['Kategori', 'Pesan'])
             
             if not synthetic_df.empty:
                 file_synth = os.path.join(dirs['synthetic'], f"synthetic_{llm}_{technique}.csv")
-                synthetic_df.to_csv(file_synth, index=False, quoting=1) # quoting=1 memaksa semua teks diapit kutipan ganda untuk aman dari koma
+                synthetic_df.to_csv(file_synth, index=False, quoting=1) 
                 
                 raw_df_cleaned = pd.concat([normal_df[['Kategori', 'Pesan']], spam_df[['Kategori', 'Pesan']]])
                 merged_df = pd.concat([raw_df_cleaned, synthetic_df], ignore_index=True)
                 
                 file_merged = os.path.join(dirs['merged'], f"merged_{llm}_{technique}.csv")
                 merged_df.to_csv(file_merged, index=False, quoting=1)
-                
-                print(f"Selesai! Baris Asli: {len(raw_df_cleaned)} | Baris Sintetis: {len(synthetic_df)} | Total Merged: {len(merged_df)}")
 
 if __name__ == "__main__":
     main()

@@ -13,7 +13,7 @@ RAW_DATA_PATH = "data/raw/sms_spam_indo.csv"
 def main():
     classifier = FakeNewsClassifier()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_dir = f"result/classification/{timestamp}"
+    output_dir = f"results/classification/{timestamp}"
 
     print("1. Melatih Model Baseline (Data Asli Tanpa Augmentasi)...")
     loader = SMSDataLoader(RAW_DATA_PATH)
