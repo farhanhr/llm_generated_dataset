@@ -13,8 +13,8 @@ RAW_DATA_PATH = "data/raw/sms_spam_indo.csv"
 def main():
     classifier = FakeNewsClassifier()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_dir = f"results/classification/{timestamp}"
-
+    output_dir = f"results/classification/{timestamp}" 
+    
     print("1. Melatih Model Baseline (Data Asli Tanpa Augmentasi)...")
     loader = SMSDataLoader(RAW_DATA_PATH)
     normal_df, spam_df = loader.process()
@@ -38,7 +38,7 @@ def main():
             dataset_name = file_name.replace('.csv', '')
             classifier.save_classification_results(metrics, dataset_name, output_dir)
 
-    print(f"\nSelesai! Hasil klasifikasi (Akurasi, F1, Recall, Precision, ROC-AUC) tersimpan di: {output_dir}")
+    print(f"\nSelesai! Hasil klasifikasi tersimpan di: {output_dir}")
 
 if __name__ == "__main__":
     main()

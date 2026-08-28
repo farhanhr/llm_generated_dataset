@@ -9,10 +9,11 @@ from src.evaluator import TextEvaluator
 TIMESTAMP_RUN = "20260827182159" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
 
+
 def main():
     evaluator = TextEvaluator()
     timestamp_eval = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_dir = f"results/evaluation/{timestamp_eval}"
+    output_dir = f"results/evaluation/{timestamp_eval}" 
 
     print(f"1. Membaca file log CSV di {TARGET_LOG_FOLDER}...")
     for file_name in os.listdir(TARGET_LOG_FOLDER):
@@ -21,28 +22,23 @@ def main():
             df_log = pd.read_csv(file_path)
             
             parts = file_name.replace('log_', '').replace('.csv', '').split('_')
-            llm_name = parts[0]
-            technique_name = parts[1] if len(parts) > 1 else "unknown"
+
+            technique_name = parts[-1]
+            llm_name = "_".join(parts[:-1])
 
             aligned_originals = []
             synthetic_pesan = []
-            
             parafrase_cols = [col for col in df_log.columns if col.startswith('parafrase_')]
             
             for _, row in df_log.iterrows():
                 orig_text = row['original']
                 for col in parafrase_cols:
                     syn_text = row[col]
-                    # Abaikan jika kolom parafrase kosong (karena LLM gagal generate dll)
                     if pd.notna(syn_text) and str(syn_text).strip() != "":
                         aligned_originals.append(orig_text)
                         synthetic_pesan.append(syn_text)
 
-            # Rekonstruksi DataFrame untuk Evaluator
-            df_synthetic = pd.DataFrame({
-                'Kategori': ['spam'] * len(synthetic_pesan),
-                'Pesan': synthetic_pesan
-            })
+            df_synthetic = pd.DataFrame({'Kategori': ['spam'] * len(synthetic_pesan), 'Pesan': synthetic_pesan})
 
             print(f"-> Menilai Kualitas: {file_name} (Total: {len(df_synthetic)} baris)")
             df_scored, avg_scores = evaluator.evaluate_dataframe(df_synthetic, aligned_originals)
