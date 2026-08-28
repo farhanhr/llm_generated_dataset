@@ -1,7 +1,8 @@
 pandas
 scikit-learn
 google-generativeai
-groq
+openai
+ollama
 bert-score
 rouge-score
 tqdm
