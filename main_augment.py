@@ -1,27 +1,34 @@
+
 import os
 import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 import warnings
+from dotenv import load_dotenv
+
 warnings.filterwarnings('ignore')
 
 from src.data_loader import SMSDataLoader
 from src.augmenter import TextAugmenter
 
-# ================= KONFIGURASI =================
-GEMINI_API_KEY = "DUMMY_KEY"
-OPENAI_API_KEY = "DUMMY_KEY"
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DATA_PATH = "data/raw/sms_spam_indo.csv"
 NUM_VARIATIONS = 2  
 
+
 MODELS_CONFIG = {
-    'Gemini_3.5_Flash_Lite': ('gemini', 'gemini-3.5-flash-lite'),
-    'GPT_4.1_Nano': ('gpt', 'gpt-4.1-nano'),
-    'GPT_5_Nano': ('gpt', 'gpt-5-nano'),
-    'LLaMA2_7B': ('ollama', 'llama2:7b'),
-    'LLaMA3_8B': ('ollama', 'llama3:8b'),
-    'Qwen3_8B': ('ollama', 'qwen3:8b'),
-    'Gemma4_e4B': ('ollama', 'gemma4:e4b')
+#    'Gemini_3.5_Flash_Lite': ('gemini', 'gemini-3.5-flash-lite'),
+#    'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Deprecated
+   'GPT_4.0_Mini': ('gpt', 'gpt-4o-mini'),
+#    'GPT_4.1_Nano': ('gpt', 'gpt-4.1-nano'),
+#    'GPT_5_Nano': ('gpt', 'gpt-5-nano'), #GPT versi 5 menggunakan temperatur default dan tidak bisa diubah
+    # 'LLaMA2_7B': ('ollama', 'llama2:7b'),
+    # 'LLaMA3_8B': ('ollama', 'llama3:8b'),
+    # 'Qwen3_8B': ('ollama', 'qwen3:8b'),
+    # 'Gemma4_e4B': ('ollama', 'gemma4:e4b')
 }
 
 TECHNIQUES_TO_RUN = ['zero-shot', 'few-shot', 'role-prompting']
@@ -47,7 +54,6 @@ def main():
     loader = SMSDataLoader(DATA_PATH)
     normal_df, spam_df = loader.process()
     
-    # Batasi sementara untuk testing. Ganti head(3) menjadi tolist() untuk full dataset.
     spam_texts = spam_df['Pesan'].head(3).tolist() 
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
@@ -55,11 +61,11 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     base_dir = f"data/augmented/{timestamp}"
     dirs = create_directory_structure(base_dir)
-    print(f"Struktur direktori dibuat di: {base_dir}")
+    print(f"Saved at: {base_dir}")
     
     for model_display, (provider, api_model_name) in MODELS_CONFIG.items():
         for technique in TECHNIQUES_TO_RUN:
-            print(f"\n---> Memproses: [{model_display}] | [{technique}] | Multiplier: {NUM_VARIATIONS}x")
+            print(f"\n[{model_display}] | [{technique}] | Multiplier: {NUM_VARIATIONS}x")
             
             synthetic_data = []
             log_csv_data = [] 

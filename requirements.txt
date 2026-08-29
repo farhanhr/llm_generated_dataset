@@ -7,3 +7,4 @@ bert-score
 rouge-score
 tqdm
 xgboost
+python-dotenv

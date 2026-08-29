@@ -7,14 +7,15 @@ warnings.filterwarnings('ignore')
 from src.data_loader import SMSDataLoader
 from src.classifier import FakeNewsClassifier
 
-TARGET_FOLDER = "data/augmented/20260827182159/merged"
+TIMESTAMP_RUN = "20260828191155"
+TARGET_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/merged"
 RAW_DATA_PATH = "data/raw/sms_spam_indo.csv"
 
 def main():
     classifier = FakeNewsClassifier()
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     output_dir = f"results/classification/{timestamp}" 
-    
+
     print("1. Melatih Model Baseline (Data Asli Tanpa Augmentasi)...")
     loader = SMSDataLoader(RAW_DATA_PATH)
     normal_df, spam_df = loader.process()
