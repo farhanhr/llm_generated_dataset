@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from src.evaluator import TextEvaluator
 
-TIMESTAMP_RUN = "20260828191155" 
+TIMESTAMP_RUN = "20260829201523" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
 
 
@@ -15,7 +15,7 @@ def main():
     timestamp_eval = datetime.now().strftime("%Y%m%d%H%M%S")
     output_dir = f"results/evaluation/{timestamp_eval}" 
 
-    print(f"1. Membaca file log CSV di {TARGET_LOG_FOLDER}...")
+    print(f"Read file log CSV di {TARGET_LOG_FOLDER}...")
     for file_name in os.listdir(TARGET_LOG_FOLDER):
         if file_name.endswith('.csv'):
             file_path = os.path.join(TARGET_LOG_FOLDER, file_name)
@@ -40,7 +40,7 @@ def main():
 
             df_synthetic = pd.DataFrame({'Kategori': ['spam'] * len(synthetic_pesan), 'Pesan': synthetic_pesan})
 
-            print(f"-> Menilai Kualitas: {file_name} (Total: {len(df_synthetic)} baris)")
+            print(f"-> Scoring: {file_name} (Total: {len(df_synthetic)} baris)")
             df_scored, avg_scores = evaluator.evaluate_dataframe(df_synthetic, aligned_originals)
             
             avg_scores['Avg_BERT_Score'] = round(avg_scores['Avg_BERT_Score'], 4)

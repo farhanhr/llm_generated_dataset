@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 from src.data_loader import SMSDataLoader
 from src.classifier import FakeNewsClassifier
 
-TIMESTAMP_RUN = "20260828191155"
+TIMESTAMP_RUN = "20260829201523"
 TARGET_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/merged"
 RAW_DATA_PATH = "data/raw/sms_spam_indo.csv"
 
@@ -16,7 +16,7 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     output_dir = f"results/classification/{timestamp}" 
 
-    print("1. Melatih Model Baseline (Data Asli Tanpa Augmentasi)...")
+    print("Melatih Model dengan data raw")
     loader = SMSDataLoader(RAW_DATA_PATH)
     normal_df, spam_df = loader.process()
     baseline_df = pd.concat([normal_df, spam_df], ignore_index=True)
@@ -25,7 +25,7 @@ def main():
     classifier.save_classification_results(baseline_metrics, "Baseline_Data_Asli", output_dir)
     print(f"-> Selesai! (Akurasi: {baseline_metrics['Akurasi']:.4f} | F1: {baseline_metrics['F1-Score']:.4f})")
 
-    print(f"\n2. Melatih Data Augmentasi LLM di {TARGET_FOLDER}...")
+    print(f"\nMelatih model dengan Data Augmentasi LLM {TARGET_FOLDER}...")
     for file_name in os.listdir(TARGET_FOLDER):
         if file_name.endswith('.csv'):
             file_path = os.path.join(TARGET_FOLDER, file_name)

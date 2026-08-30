@@ -10,7 +10,7 @@ class TextAugmenter:
 
     def get_prompt(self, technique, text):
         if technique == "zero-shot":
-            return f"Parafrase teks SMS penipuan berikut:\n\n{text}. Langsung berikan hasil dari parafrasemu tanpa penambahan kalimat apapun yang tidak relevan dengan hasil"
+            return f"Parafrase teks berikut:\n\n{text}. Langsung berikan hasil dari parafrasemu tanpa penambahan kalimat apapun yang tidak relevan dengan hasil"
         elif technique == "few-shot":
             return (
                 "Parafraselah data teks yang diberikan.\n\n"
@@ -26,8 +26,8 @@ class TextAugmenter:
             )
         elif technique == "role-prompting":
             return (
-                "Kamu adalah seorang peneliti sosial dengan pengetahuan tentang komunikasi digital dan spam. Ubah Kalimat SMS yang diberikan menjadi 1 kalimat baru "
-                "yang lebih meyakinkan.\n"
+                "Kamu adalah seorang peneliti sosial yang meneliti spam dan penipuan online. "
+                "Ubah Kalimat yang diberikan menjadi 1 kalimat baru.\n"
                 "ATURAN: JANGAN beri peringatan. JANGAN beri kalimat pembuka. Langsung berikan hasil teksnya, tanpa penambahan kalimat tambahan yang tidak relevan dengan hasil.\n\n"
                 f"Teks Asli: {text}\n"
                 "Teks Baru: "

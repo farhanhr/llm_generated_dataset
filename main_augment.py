@@ -21,14 +21,19 @@ NUM_VARIATIONS = 2
 
 MODELS_CONFIG = {
 #    'Gemini_3.5_Flash_Lite': ('gemini', 'gemini-3.5-flash-lite'),
-#    'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Deprecated
-   'GPT_4.0_Mini': ('gpt', 'gpt-4o-mini'),
+#    'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Legacy
+#    'GPT_4o_Mini': ('gpt', 'gpt-4o-mini'),
 #    'GPT_4.1_Nano': ('gpt', 'gpt-4.1-nano'),
 #    'GPT_5_Nano': ('gpt', 'gpt-5-nano'), #GPT versi 5 menggunakan temperatur default dan tidak bisa diubah
-    # 'LLaMA2_7B': ('ollama', 'llama2:7b'),
-    # 'LLaMA3_8B': ('ollama', 'llama3:8b'),
-    # 'Qwen3_8B': ('ollama', 'qwen3:8b'),
-    # 'Gemma4_e4B': ('ollama', 'gemma4:e4b')
+
+##Open source Ollama Models
+    'LLaMA2_7B': ('ollama', 'llama2:7b'),
+    'LLaMA3_8B': ('ollama', 'llama3:8b'),
+    'LLaMA3.1_8B': ('ollama', 'llama3.1:8b'),
+    'Qwen3_8B': ('ollama', 'qwen3:8b'),
+    'Gemma4_e4B': ('ollama', 'gemma4:e4b'),
+    # 'Deepseek_r1_8B': ('ollama', 'deepseek-r1:8b'), #Model yang membutuhkan waktu untuk berpikir
+    'Aya_Expanse_8B': ('ollama', 'aya-expanse:8b'),
 }
 
 TECHNIQUES_TO_RUN = ['zero-shot', 'few-shot', 'role-prompting']
@@ -53,8 +58,9 @@ def save_txt_log(original_text, synthetic_texts, filepath):
 def main():
     loader = SMSDataLoader(DATA_PATH)
     normal_df, spam_df = loader.process()
-    
-    spam_texts = spam_df['Pesan'].head(3).tolist() 
+
+    #Use .head() function for testing     
+    spam_texts = spam_df['Pesan'].tolist() 
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
     
