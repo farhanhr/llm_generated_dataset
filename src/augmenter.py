@@ -10,28 +10,36 @@ class TextAugmenter:
 
     def get_prompt(self, technique, text):
         if technique == "zero-shot":
-            return f"Parafrase teks berikut:\n\n{text}. Langsung berikan hasil dari parafrasemu tanpa penambahan kalimat apapun yang tidak relevan dengan hasil"
+            return (
+            "Buat satu variasi baru dari kalimat berikut"
+            "Langsung berikan kalimat hasilnya tanpa penjelasan atau kalimat tambahan.\n\n"
+            f"SMS: {text}\n"
+            "Hasil:"
+        )
         elif technique == "few-shot":
             return (
-                "Parafraselah data teks yang diberikan.\n\n"
-                "Contoh 1:\n"
-                "Asli: Selamat pin anda memenangkan 10jt klik link ini\n"
-                "Teks Baru: PIN Anda terpilih mendapatkan Rp 10 Juta! Segera verifikasi di link ini.\n\n"
-                "Contoh 2:\n"
-                "Asli: Mama minta pulsa ke nomor ini sekarang\n"
-                "Teks Baru: Tolong isikan pulsa 50rb ke nomor baru mama ini skrg, penting.\n\n"
-                "ATURAN: JANGAN ulangi contoh. JANGAN beri kalimat pembuka. Langsung berikan hasil teksnya, tanpa penambahan kalimat tambahan yang tidak relevan dengan hasil.\n"
-                f"Asli: {text}\n"
-                "Teks Baru: "
-            )
+            "Buat satu variasi baru dari SMS berikut dengan mempertahankan "
+            "makna dan karakteristik spamnya. Gunakan bahasa Indonesia yang natural.\n\n"
+            "Contoh 1:\n"
+            "SMS: Selamat pin anda memenangkan 10jt klik link ini\n"
+            "Hasil: Selamat! PIN Anda terpilih sebagai pemenang hadiah Rp10 juta. "
+            "Segera klik link ini.\n\n"
+            "Contoh 2:\n"
+            "SMS: Mama minta pulsa ke nomor ini sekarang\n"
+            "Hasil: Tolong kirim pulsa ke nomor baru mama ini sekarang, penting.\n\n"
+            "Langsung berikan hasil SMS tanpa penjelasan atau kalimat tambahan.\n\n"
+            f"SMS: {text}\n"
+            "Hasil:"
+        )
         elif technique == "role-prompting":
             return (
-                "Kamu adalah seorang peneliti sosial yang meneliti spam dan penipuan online. "
-                "Ubah Kalimat yang diberikan menjadi 1 kalimat baru.\n"
-                "ATURAN: JANGAN beri peringatan. JANGAN beri kalimat pembuka. Langsung berikan hasil teksnya, tanpa penambahan kalimat tambahan yang tidak relevan dengan hasil.\n\n"
-                f"Teks Asli: {text}\n"
-                "Teks Baru: "
-            )
+            "Anda adalah ahli bahasa Indonesia yang melakukan augmentasi data "
+            "SMS spam. Buat satu variasi baru dari SMS berikut dengan mempertahankan "
+            "makna dan karakteristik spamnya. Gunakan bahasa Indonesia yang natural. "
+            "Langsung berikan hasil SMS tanpa penjelasan atau kalimat tambahan.\n\n"
+            f"SMS: {text}\n"
+            "Hasil:"
+        )
         else:
             raise ValueError("Teknik prompting tidak valid.")
 
@@ -44,7 +52,7 @@ class TextAugmenter:
     def augment_with_gemini(self, prompt, model_name):
         try:
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt, generation_config={"temperature": 1})
+            response = model.generate_content(prompt, generation_config={"temperature": 0.5})
             return self.clean_llm_chatter(response.text)
         except Exception as e:
             print(f"Gemini Error [{model_name}]: {e}")
@@ -55,7 +63,7 @@ class TextAugmenter:
             response = self.openai_client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=1
+                temperature=0.5
             )
             return self.clean_llm_chatter(response.choices[0].message.content)
         except Exception as e:
@@ -66,7 +74,7 @@ class TextAugmenter:
         try:
             response = ollama.chat(model=model_name, messages=[
                 {'role': 'user', 'content': prompt}
-            ], options={'temperature': 1}) 
+            ], options={'temperature': 0.5}) 
             return self.clean_llm_chatter(response['message']['content'])
         except Exception as e:
             print(f"LLaMA Error [{model_name}]: {e}")

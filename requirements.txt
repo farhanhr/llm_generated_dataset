@@ -5,6 +5,8 @@ openai
 ollama
 bert-score
 rouge-score
+nltk 
+sentence-transformers
 tqdm
 xgboost
 python-dotenv
