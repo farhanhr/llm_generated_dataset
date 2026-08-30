@@ -6,23 +6,25 @@ warnings.filterwarnings('ignore')
 
 from src.evaluator import TextEvaluator
 
-TIMESTAMP_RUN = "20260829201523" 
+TIMESTAMP_RUN = "20260827182159" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
-
 
 def main():
     evaluator = TextEvaluator()
-    timestamp_eval = datetime.now().strftime("%Y%m%d%H%M%S")
-    output_dir = f"results/evaluation/{timestamp_eval}" 
+    
+    output_dir = f"results/evaluation/{TIMESTAMP_RUN}-evaluation"
+    if os.path.exists(output_dir):
 
-    print(f"Read file log CSV di {TARGET_LOG_FOLDER}...")
+        time_suffix = datetime.now().strftime("%H%M%S")
+        output_dir = f"{output_dir}_{time_suffix}"
+
+    print(f"Read file at {TARGET_LOG_FOLDER}...")
     for file_name in os.listdir(TARGET_LOG_FOLDER):
         if file_name.endswith('.csv'):
             file_path = os.path.join(TARGET_LOG_FOLDER, file_name)
             df_log = pd.read_csv(file_path)
             
             parts = file_name.replace('log_', '').replace('.csv', '').split('_')
-
             technique_name = parts[-1]
             llm_name = "_".join(parts[:-1])
 
@@ -43,10 +45,12 @@ def main():
             print(f"-> Scoring: {file_name} (Total: {len(df_synthetic)} baris)")
             df_scored, avg_scores = evaluator.evaluate_dataframe(df_synthetic, aligned_originals)
             
-            avg_scores['Avg_BERT_Score'] = round(avg_scores['Avg_BERT_Score'], 4)
-            avg_scores['Avg_ROUGE_L'] = round(avg_scores['Avg_ROUGE_L'], 4)
-            df_scored['BERT_Score'] = df_scored['BERT_Score'].round(4)
-            df_scored['ROUGE_L'] = df_scored['ROUGE_L'].round(4)
+            for k in avg_scores.keys():
+                avg_scores[k] = round(avg_scores[k], 4)
+                
+            metrics_cols = ['Cosine_Sim', 'BERT_Score', 'METEOR', 'ROUGE_L', 'BLEU']
+            for col in metrics_cols:
+                df_scored[col] = df_scored[col].round(4)
             
             evaluator.save_evaluation_results(df_scored, avg_scores, llm_name, technique_name, "TextQuality", output_dir)
 
