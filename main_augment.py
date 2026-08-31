@@ -16,7 +16,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DATA_PATH = "data/raw/sms_spam_indo.csv"
-NUM_VARIATIONS = 2  
+NUM_VARIATIONS = 4  #Multiplier
 
 
 MODELS_CONFIG = {
@@ -59,7 +59,7 @@ def main():
     normal_df, spam_df = loader.process()
 
     #Use .head() function for testing     
-    spam_texts = spam_df['Pesan'].head(2).tolist() 
+    spam_texts = spam_df['Pesan'].tolist() 
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
     

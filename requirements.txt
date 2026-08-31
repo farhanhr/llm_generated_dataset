@@ -10,3 +10,8 @@ sentence-transformers
 tqdm
 xgboost
 python-dotenv
+matplotlib
+seaborn
+fastapi
+pydantic
+uvicorn[standard]

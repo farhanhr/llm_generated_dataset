@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Augmentation Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style> [x-cloak] { display: none !important; } </style>
+</head
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    <div x-data="augmentationApp()" class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-2">LLM Data Augmentation Engine</h1>
+            <p class="text-slate-500">Evaluasi Parafrase Teks & Peningkatan Klasifikasi Spam</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sidebar Konfigurasi -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="font-bold text-lg mb-6 text-slate-800 border-b pb-2">Konfigurasi Model</h3>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Pilih Model</label>
+                        <select x-model="model" class="w-full border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-blue-500">
+                            <option value="LLaMA3_8B">LLaMA 3 (8B)</option>
+                            <option value="LLaMA2_7B">LLaMA 2 (7B)</option>
+                            <option value="Qwen3_8B">Qwen 3 (8B)</option>
+                            <option value="Gemma4_e4B">Gemma 4 (e4B)</option>
+                            <option value="GPT_3.5_Turbo">GPT-3.5 Turbo</option>
+                            <option value="GPT_4o_Mini">GPT-4o Mini</option>
+                            <option value="GPT_4.1_Nano">GPT-4.1 Nano</option>
+                            <option value="Gemini_3.5_Flash_Lite">Gemini 3.5 Flash</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Teknik Prompting</label>
+                        <select x-model="technique" class="w-full border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-blue-500">
+                            <option value="zero-shot">Zero-Shot</option>
+                            <option value="few-shot">Few-Shot</option>
+                            <option value="role-prompting">Role-Prompting</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Temperature: <span x-text="temperature" class="text-blue-600"></span></label>
+                        <input type="range" x-model="temperature" min="0" max="2" step="0.1" class="w-full accent-blue-600">
+                        <p class="text-xs text-slate-400 mt-1">Suhu tinggi (1.5 - 2.0) meningkatkan kompleksitas variasi.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-600 mb-1">Variasi per Baris</label>
+                        <input type="number" x-model="variance" min="1" max="5" class="w-full border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-slate-400 mt-1">Max 5.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="flex space-x-2 mb-6 bg-slate-200 p-1 rounded-xl">
+                    <button @click="mode = 'single'" :class="mode === 'single' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-700'" class="flex-1 py-2 rounded-lg transition-all">Parafrase</button>
+                    <button @click="mode = 'batch'" :class="mode === 'batch' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-700'" class="flex-1 py-2 rounded-lg transition-all">Dataset Augmentation (CSV)</button>
+                </div>
+
+                <!-- Mode Single Text -->
+                <div x-show="mode === 'single'" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100" x-cloak>
+                    <textarea x-model="singleText" rows="4" class="w-full border-slate-200 rounded-xl p-4 bg-slate-50 focus:ring-2 focus:ring-blue-500 mb-4" placeholder="Masukkan 1 kalimat SMS penipuan di sini..."></textarea>
+                    
+                    <button @click="processSingle()" :disabled="isProcessingSingle || singleText.trim() === ''" class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-3 rounded-xl transition duration-200 flex justify-center items-center">
+                        <span x-show="!isProcessingSingle">Generate</span>
+                        <span x-show="isProcessingSingle" class="animate-pulse">Processing...</span>
+                    </button>
+
+                    <div x-show="singleResult.length > 0" class="mt-6 space-y-3" x-cloak>
+                        <h4 class="text-sm font-bold text-slate-700 mb-2">Result:</h4>
+                        <template x-for="(text, index) in singleResult" :key="index">
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                <span class="block text-xs font-bold text-slate-400 mb-1" x-text="'Variasi ' + (index + 1)"></span>
+                                <p x-text="text" class="text-slate-700 text-sm leading-relaxed"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Mode Batch CSV -->
+                <div x-show="mode === 'batch'" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100" x-cloak>
+                    
+                    <div x-show="!isProcessingBatch && !batchDone">
+                        <label class="block text-sm font-semibold text-slate-600 mb-2">Upload Raw Dataset (CSV)</label>
+                        <input type="file" accept=".csv" @change="csvFile = $event.target.files[0]" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4">
+                        
+                        <button @click="processBatch()" :disabled="!csvFile" class="w-full bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl transition duration-200">
+                            Generate
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar (Realtime via WebSocket) -->
+                    <div x-show="isProcessingBatch" x-cloak class="py-8 text-center">
+                        <div class="mb-4 flex justify-between text-sm font-bold text-blue-800">
+                            <span x-text="batchMessage"></span>
+                            <span x-text="batchProgress + '%'"></span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-3">
+                            <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" :style="'width: ' + batchProgress + '%'"></div>
+                        </div>
+                    </div>
+
+                    <div x-show="batchDone" x-cloak class="space-y-6 mt-4">
+                        <div class="flex justify-between items-center bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <div>
+                                <h3 class="font-bold text-blue-900">Dataset diperbanyak</h3>
+                                <p class="text-sm text-blue-700">Teks sintetis telah digabungkan dengan raw data.</p>
+                            </div>
+                            <button @click="downloadCSV()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold text-sm">Download Data CSV</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Metrik Kualitas Teks -->
+                            <div class="bg-white border border-slate-200 p-5 rounded-xl">
+                                <h4 class="font-bold text-slate-800 mb-4 border-b pb-2">Kualitas Semantik Teks</h4>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-slate-600">Cosine Similarity</span>
+                                    <span class="font-bold text-slate-900" x-text="results.text_quality?.Avg_Cosine_Sim || '-'"></span>
+                                </div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-slate-600">BERTScore (F1)</span>
+                                    <span class="font-bold text-slate-900" x-text="results.text_quality?.Avg_BERT_Score || '-'"></span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-slate-600">ROUGE-L</span>
+                                    <span class="font-bold text-slate-900" x-text="results.text_quality?.Avg_ROUGE_L || '-'"></span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-800 text-white p-5 rounded-xl">
+                                <h4 class="font-bold text-white mb-4 border-b border-slate-600 pb-2">Performa Klasifikasi XGBoost</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between text-xs text-slate-300 mb-1">
+                                            <span>Recall</span>
+                                            <span><span x-text="results.classification_baseline?.Recall || '-'"></span> → <span class="text-green-400 font-bold" x-text="results.classification_augmented?.Recall || '-'"></span></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs text-slate-300 mb-1">
+                                            <span>F1-Score</span>
+                                            <span><span x-text="results.classification_baseline?.['F1-Score'] || '-'"></span> → <span class="text-green-400 font-bold" x-text="results.classification_augmented?.['F1-Score'] || '-'"></span></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs text-slate-300 mb-1">
+                                            <span>ROC-AUC</span>
+                                            <span><span x-text="results.classification_baseline?.['ROC-AUC'] || '-'"></span> → <span class="text-green-400 font-bold" x-text="results.classification_augmented?.['ROC-AUC'] || '-'"></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button @click="batchDone = false; csvFile = null;" class="w-full text-slate-500 hover:text-slate-800 text-sm font-semibold py-2">Mulai Eksperimen Baru</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- State Management Alpine.js -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('augmentationApp', () => ({
+                mode: 'single',
+                model: 'LLaMA3_8B',
+                technique: 'zero-shot',
+                temperature: 0.8,
+                variance: 1,
+                
+                // Single State
+                singleText: '',
+                singleResult: [],
+                isProcessingSingle: false,
+
+                // Batch State
+                csvFile: null,
+                batchProgress: 0,
+                batchMessage: '',
+                isProcessingBatch: false,
+                batchDone: false,
+                results: {},
+
+                async processSingle() {
+                    this.isProcessingSingle = true;
+                    this.singleResult = []; // Reset hasil sebelumnya
+                    try {
+                        const res = await fetch('/api/single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                text: this.singleText,
+                                model_name: this.model,
+                                technique: this.technique,
+                                temperature: parseFloat(this.temperature),
+                                variance: parseInt(this.variance)
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.singleResult = data.augmented;
+                        } else {
+                            alert("Gagal: " + data.detail);
+                        }
+                    } catch (e) {
+                        alert("Terjadi kesalahan jaringan.");
+                    }
+                    this.isProcessingSingle = false;
+                },
+
+                processBatch() {
+                    if (this.variance > 5) this.variance = 5;
+                    this.isProcessingBatch = true;
+                    this.batchDone = false;
+                    this.batchProgress = 0;
+                    this.batchMessage = "Menyiapkan koneksi data...";
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const csvData = e.target.result;
+                        const ws = new WebSocket(`ws://${window.location.host}/ws/batch`);
+
+                        ws.onopen = () => {
+                            ws.send(JSON.stringify({
+                                model_name: this.model,
+                                technique: this.technique,
+                                temperature: parseFloat(this.temperature),
+                                variance: parseInt(this.variance),
+                                csv_data: csvData
+                            }));
+                        };
+
+                        ws.onmessage = (event) => {
+                            const data = JSON.parse(event.data);
+                            if (data.status === 'processing') {
+                                this.batchProgress = data.progress;
+                                this.batchMessage = data.message;
+                            } else if (data.status === 'done') {
+                                this.batchProgress = 100;
+                                this.batchMessage = data.message;
+                                this.results = data;
+                                setTimeout(() => {
+                                    this.isProcessingBatch = false;
+                                    this.batchDone = true;
+                                }, 500);
+                            } else if (data.status === 'error') {
+                                alert("Proses Terhenti: " + data.message);
+                                this.isProcessingBatch = false;
+                            }
+                        };
+                        
+                        ws.onerror = () => {
+                            alert("Koneksi WebSocket terputus.");
+                            this.isProcessingBatch = false;
+                        };
+                    };
+                    reader.readAsText(this.csvFile);
+                },
+
+                downloadCSV() {
+                    if (!this.results.merged_csv) return;
+                    const blob = new Blob([this.results.merged_csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${this.model}_${this.technique}_augmented.csv`;
+                    a.click();
+                }
+            }))
+        })
+    </script>
+</body>
+</html>

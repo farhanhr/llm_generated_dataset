@@ -9,7 +9,7 @@ import os
 class FakeNewsClassifier:
     def __init__(self, max_features=5000):
         self.vectorizer = TfidfVectorizer(max_features=max_features)
-        self.model = XGBClassifier(eval_metric='logloss', use_label_encoder=False, random_state=42)
+        self.model = XGBClassifier(eval_metric='logloss', random_state=42)
 
     def train_and_evaluate(self, df):
         """Melatih XGBoost dan mengembalikan metrik evaluasi klasifikasi (Dibulatkan 4 desimal)."""

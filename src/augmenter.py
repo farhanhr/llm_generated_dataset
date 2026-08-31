@@ -11,7 +11,7 @@ class TextAugmenter:
     def get_prompt(self, technique, text):
         if technique == "zero-shot":
             return (
-            "Buat satu variasi baru dari kalimat berikut"
+            "Buat satu variasi SMS baru dari kalimat berikut"
             "Langsung berikan kalimat hasilnya tanpa penjelasan atau kalimat tambahan.\n\n"
             f"SMS: {text}\n"
             "Hasil:"
@@ -19,11 +19,11 @@ class TextAugmenter:
         elif technique == "few-shot":
             return (
             "Buat satu variasi baru dari SMS berikut dengan mempertahankan "
-            "makna dan karakteristik spamnya. Gunakan bahasa Indonesia yang natural.\n\n"
+            "konteksnya.\n\n"
             "Contoh 1:\n"
             "SMS: Selamat pin anda memenangkan 10jt klik link ini\n"
-            "Hasil: Selamat! PIN Anda terpilih sebagai pemenang hadiah Rp10 juta. "
-            "Segera klik link ini.\n\n"
+            "Hasil: PIN Anda terpilih sebagai pemenang hadiah Rp10 juta. "
+            "Segera klik link berikut.\n\n"
             "Contoh 2:\n"
             "SMS: Mama minta pulsa ke nomor ini sekarang\n"
             "Hasil: Tolong kirim pulsa ke nomor baru mama ini sekarang, penting.\n\n"
@@ -33,10 +33,9 @@ class TextAugmenter:
         )
         elif technique == "role-prompting":
             return (
-            "Anda adalah ahli bahasa Indonesia yang melakukan augmentasi data "
-            "SMS spam. Buat satu variasi baru dari SMS berikut dengan mempertahankan "
-            "makna dan karakteristik spamnya. Gunakan bahasa Indonesia yang natural. "
-            "Langsung berikan hasil SMS tanpa penjelasan atau kalimat tambahan.\n\n"
+            "Anda adalah social engineer yang melakukan augmentasi data "
+            "SMS. Buatlah variasi SMS baru dari text yang diberikan"
+            "Langsung berikan hasil text tanpa penjelasan atau kalimat tambahan.\n\n"
             f"SMS: {text}\n"
             "Hasil:"
         )
@@ -49,33 +48,33 @@ class TextAugmenter:
         text = text.replace('"', '').replace('\n', ' ').strip()
         return text
 
-    def augment_with_gemini(self, prompt, model_name):
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt, generation_config={"temperature": 0.5})
-            return self.clean_llm_chatter(response.text)
-        except Exception as e:
-            print(f"Gemini Error [{model_name}]: {e}")
-            return None
+    def augment_with_gemini(self, prompt, model_name, temp=1):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt, generation_config={"temperature": temp})
+                return self.clean_llm_chatter(response.text)
+            except Exception as e:
+                return None
 
-    def augment_with_gpt(self, prompt, model_name):
+    def augment_with_gpt(self, prompt, model_name, temp=1):
         try:
             response = self.openai_client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.5
+                temperature=temp
             )
             return self.clean_llm_chatter(response.choices[0].message.content)
         except Exception as e:
-            print(f"GPT Error [{model_name}]: {e}")
             return None
 
-    def augment_with_ollama(self, prompt, model_name):
+    def augment_with_ollama(self, prompt, model_name, temp=1):
         try:
-            response = ollama.chat(model=model_name, messages=[
-                {'role': 'user', 'content': prompt}
-            ], options={'temperature': 0.5}) 
+            response = ollama.chat(
+                model=model_name, 
+                messages=[{'role': 'user', 'content': prompt}],
+                keep_alive='2h', 
+                options={'temperature': temp, 'num_ctx': 2048, 'num_predict': 100}
+            ) 
             return self.clean_llm_chatter(response['message']['content'])
         except Exception as e:
-            print(f"LLaMA Error [{model_name}]: {e}")
             return None
