@@ -1,6 +1,6 @@
 pandas
 scikit-learn
-google-generativeai
+google.genai
 openai
 ollama
 bert-score

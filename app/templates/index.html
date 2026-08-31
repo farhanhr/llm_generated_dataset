@@ -14,7 +14,6 @@
         <!-- Header -->
         <header class="mb-10 text-center">
             <h1 class="text-4xl font-extrabold text-slate-900 mb-2">LLM Data Augmentation Engine</h1>
-            <p class="text-slate-500">Evaluasi Parafrase Teks & Peningkatan Klasifikasi Spam</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -161,7 +160,7 @@
                             </div>
                         </div>
                         
-                        <button @click="batchDone = false; csvFile = null;" class="w-full text-slate-500 hover:text-slate-800 text-sm font-semibold py-2">Mulai Eksperimen Baru</button>
+                        <button @click="batchDone = false; csvFile = null;" class="w-full text-slate-500 hover:text-slate-800 text-sm font-semibold py-2">Restart</button>
                     </div>
 
                 </div>
@@ -169,7 +168,6 @@
         </div>
     </div>
 
-    <!-- State Management Alpine.js -->
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('augmentationApp', () => ({

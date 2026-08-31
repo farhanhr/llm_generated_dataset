@@ -96,8 +96,8 @@ async def process_batch(websocket: WebSocket):
 
         spam_texts = df_input[df_input['Kategori'] == 'spam']['Pesan'].tolist() if 'Kategori' in df_input.columns else df_input['Pesan'].tolist()
         
-        # Batasi data batch untuk demo interface
-        spam_texts = spam_texts[:20] 
+        ## Batasi data batch untuk demo interface
+        # spam_texts = spam_texts[:20] 
         total_rows = len(spam_texts)
         synthetic_data = []
         aligned_originals = []
@@ -135,9 +135,11 @@ async def process_batch(websocket: WebSocket):
         baseline_df = pd.concat([normal_df, spam_df], ignore_index=True)
         merged_df = pd.concat([baseline_df, df_synthetic], ignore_index=True)
         
+        if 'Kategori' in merged_df.columns and 'Pesan' in merged_df.columns:
+            merged_df = merged_df[['Kategori', 'Pesan']]
+
         metrics_baseline = classifier.train_and_evaluate(baseline_df)
         metrics_augmented = classifier.train_and_evaluate(merged_df)
-        
         csv_export = merged_df.to_csv(index=False)
         
         await websocket.send_json({

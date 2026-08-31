@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from src.evaluator import TextEvaluator
 
-TIMESTAMP_RUN = "20260827182159" 
+TIMESTAMP_RUN = "20260830213138" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
 
 def main():
@@ -48,13 +48,13 @@ def main():
             for k in avg_scores.keys():
                 avg_scores[k] = round(avg_scores[k], 4)
                 
-            metrics_cols = ['Cosine_Sim', 'BERT_Score', 'METEOR', 'ROUGE_L', 'BLEU']
+            metrics_cols = ['BERT_Score', 'Cosine_Sim', 'ROUGE_L', 'BLEU']
             for col in metrics_cols:
                 df_scored[col] = df_scored[col].round(4)
             
             evaluator.save_evaluation_results(df_scored, avg_scores, llm_name, technique_name, "TextQuality", output_dir)
 
-    print(f"\nSelesai! Hasil evaluasi kualitas teks tersimpan di: {output_dir}")
+    print(f"\nFinished! Saved at: {output_dir}")
 
 if __name__ == "__main__":
     main()
