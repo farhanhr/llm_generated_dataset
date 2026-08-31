@@ -1,11 +1,12 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from openai import OpenAI
 import ollama
 import re
 
 class TextAugmenter:
     def __init__(self, gemini_key, openai_key):
-        genai.configure(api_key=gemini_key)
+        self.gemini_client = genai.Client(api_key=gemini_key)
         self.openai_client = OpenAI(api_key=openai_key)
 
     def get_prompt(self, technique, text):
@@ -48,33 +49,49 @@ class TextAugmenter:
         text = text.replace('"', '').replace('\n', ' ').strip()
         return text
 
-    def augment_with_gemini(self, prompt, model_name, temp=1):
-            try:
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt, generation_config={"temperature": temp})
-                return self.clean_llm_chatter(response.text)
-            except Exception as e:
-                return None
+    def augment_with_gemini(self, prompt, model_name, temp=0.8):
+        try:
+            response = self.gemini_client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temp,
+                    top_p=0.9, #Membuang kata/token acak diluar probabilitas kumulatif 90%
+                )
+            )
+            return self.clean_llm_chatter(response.text)
+        except Exception as e:
+            print(f"Gemini Error: {e}")
+            return None
 
-    def augment_with_gpt(self, prompt, model_name, temp=1):
+    def augment_with_gpt(self, prompt, model_name, temp=0.8):
         try:
             response = self.openai_client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=temp
+                temperature=temp,
+                top_p=0.9,
+                frequency_penalty=1.1, #repetition penalty
             )
             return self.clean_llm_chatter(response.choices[0].message.content)
         except Exception as e:
+            print(f"GPT Error: {e}")
             return None
-
-    def augment_with_ollama(self, prompt, model_name, temp=1):
+        
+    def augment_with_ollama(self, prompt, model_name, temp=0.8):
         try:
             response = ollama.chat(
                 model=model_name, 
                 messages=[{'role': 'user', 'content': prompt}],
                 keep_alive='2h', 
-                options={'temperature': temp, 'num_ctx': 2048, 'num_predict': 100}
+                options={
+                    'temperature': temp,
+                    'top_p': 0.9,           
+                    'repeat_penalty': 1.1,  # repetition penalty
+                    'num_ctx': 1024,
+                }
             ) 
             return self.clean_llm_chatter(response['message']['content'])
         except Exception as e:
+            print(f"LLaMA Error [{model_name}]: {e}")
             return None
