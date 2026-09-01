@@ -19,8 +19,7 @@ class TextAugmenter:
         )
         elif technique == "few-shot":
             return (
-            "Buat satu variasi baru dari SMS berikut dengan mempertahankan "
-            "konteksnya.\n\n"
+            "Buat satu variasi baru dari SMS berikut dengan mempertahankan konteksnya \n\n"
             "Contoh 1:\n"
             "SMS: Selamat pin anda memenangkan 10jt klik link ini\n"
             "Hasil: PIN Anda terpilih sebagai pemenang hadiah Rp10 juta. "
@@ -34,8 +33,8 @@ class TextAugmenter:
         )
         elif technique == "role-prompting":
             return (
-            "Anda adalah social engineer yang melakukan augmentasi data "
-            "SMS. Buatlah variasi SMS baru dari text yang diberikan"
+            "Anda adalah social engineer yang melakukan augmentasi data SMS."
+            "Buatlah variasi SMS baru dari text yang diberikan.\n"
             "Langsung berikan hasil text tanpa penjelasan atau kalimat tambahan.\n\n"
             f"SMS: {text}\n"
             "Hasil:"
@@ -45,7 +44,7 @@ class TextAugmenter:
 
     def clean_llm_chatter(self, text):
         if not text: return ""
-        text = re.sub(r'^(here is|here are|berikut|ini adalah|teks baru:|parafrase:).*?\n', '', text, flags=re.IGNORECASE|re.DOTALL)
+        text = re.sub(r'^(here is|here are|berikut|ini adalah|teks baru:|parafrase:|SMS:).*?\n', '', text, flags=re.IGNORECASE|re.DOTALL)
         text = text.replace('"', '').replace('\n', ' ').strip()
         return text
 

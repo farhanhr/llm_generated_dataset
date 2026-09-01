@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from src.evaluator import TextEvaluator
 
-TIMESTAMP_RUN = "20260830213138" 
+TIMESTAMP_RUN = "20260831151426" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
 
 def main():
@@ -48,7 +48,7 @@ def main():
             for k in avg_scores.keys():
                 avg_scores[k] = round(avg_scores[k], 4)
                 
-            metrics_cols = ['BERT_Score', 'Cosine_Sim', 'ROUGE_L', 'BLEU']
+            metrics_cols = ['BERT_Score', 'ROUGE_L', 'BLEU']
             for col in metrics_cols:
                 df_scored[col] = df_scored[col].round(4)
             

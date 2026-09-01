@@ -54,14 +54,14 @@ class TextEvaluator:
         candidates = df['Pesan'].tolist()
         
         df['BERT_Score'] = self.get_bertscore_batch(original_texts, candidates)
-        df['Cosine_Sim'] = self.get_cosine_sim_batch(original_texts, candidates)
+        # df['Cosine_Sim'] = self.get_cosine_sim_batch(original_texts, candidates)
         
         df['ROUGE_L'] = [self.get_rouge_score(orig, cand) for orig, cand in zip(original_texts, candidates)]
         df['BLEU'] = [self.get_bleu_score(orig, cand) for orig, cand in zip(original_texts, candidates)]
         
         avg_scores = {
             'Avg_BERT_Score': df['BERT_Score'].mean(),
-            'Avg_Cosine_Sim': df['Cosine_Sim'].mean(),
+            # 'Avg_Cosine_Sim': df['Cosine_Sim'].mean(),
             'Avg_ROUGE_L': df['ROUGE_L'].mean(),
             'Avg_BLEU': df['BLEU'].mean()
         }
@@ -72,7 +72,7 @@ class TextEvaluator:
         file_name = f"{model}_{technique}_{test_name}.csv"
         file_path = os.path.join(timestamp_dir, file_name)
         
-        cols_order = ['Kategori', 'Pesan', 'BERT_Score', 'Cosine_Sim', 'ROUGE_L', 'BLEU']
+        cols_order = ['Kategori', 'Pesan', 'BERT_Score', 'ROUGE_L', 'BLEU']
         df_scored[cols_order].to_csv(file_path, index=False, quoting=csv.QUOTE_NONNUMERIC)
         
         summary_path = os.path.join(timestamp_dir, "Summary_TextQuality.csv")
@@ -81,7 +81,7 @@ class TextEvaluator:
             'Model': model,
             'Teknik': technique,
             'BERT_score': avg_scores['Avg_BERT_Score'],
-            'Cosine_Sim': avg_scores['Avg_Cosine_Sim'],
+            # 'Cosine_Sim': avg_scores['Avg_Cosine_Sim'],
             'ROUGE_score': avg_scores['Avg_ROUGE_L'],
             'BLEU': avg_scores['Avg_BLEU']
         }])

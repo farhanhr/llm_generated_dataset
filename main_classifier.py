@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 from src.data_loader import SMSDataLoader
 from src.classifier import FakeNewsClassifier
 
-TIMESTAMP_RUN = "20260830213138"
+TIMESTAMP_RUN = "20260831151426"
 TARGET_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/merged"
 RAW_DATA_PATH = "data/raw/sms_spam_indo.csv"
 
