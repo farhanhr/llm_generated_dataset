@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
 from xgboost import XGBClassifier
@@ -11,22 +10,26 @@ class FakeNewsClassifier:
         self.vectorizer = TfidfVectorizer(max_features=max_features)
         self.model = XGBClassifier(eval_metric='logloss', random_state=42)
 
-    def train_and_evaluate(self, df):
-        """Melatih XGBoost dan mengembalikan metrik evaluasi klasifikasi (Dibulatkan 4 desimal)."""
-        X = self.vectorizer.fit_transform(df['Pesan']).toarray()
-        y = df['Kategori'].map({'ham': 0, 'spam': 1}).values
+    def train_and_evaluate(self, train_df, test_df):
+        """Melatih XGBoost dan mengembalikan metrik evaluasi klasifikasi tanpa Data Leakage."""
+        
+        X_train = self.vectorizer.fit_transform(train_df['Pesan']).toarray()
+        X_test = self.vectorizer.transform(test_df['Pesan']).toarray()
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+        label_map = {'ham': 0, 'normal': 0, 'spam': 1}
+        y_train = train_df['Kategori'].map(label_map).values
+        y_test = test_df['Kategori'].map(label_map).values
 
         self.model.fit(X_train, y_train)
+        
         y_pred = self.model.predict(X_test)
         y_prob = self.model.predict_proba(X_test)[:, 1]
 
         metrics = {
             'Akurasi': round(accuracy_score(y_test, y_pred), 4),
-            'Precision': round(precision_score(y_test, y_pred), 4),
-            'Recall': round(recall_score(y_test, y_pred), 4),
-            'F1-Score': round(f1_score(y_test, y_pred), 4),
+            'Precision': round(precision_score(y_test, y_pred, zero_division=0), 4),
+            'Recall': round(recall_score(y_test, y_pred, zero_division=0), 4),
+            'F1-Score': round(f1_score(y_test, y_pred, zero_division=0), 4),
             'ROC-AUC': round(roc_auc_score(y_test, y_prob), 4)
         }
         return metrics

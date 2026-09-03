@@ -1,4 +1,3 @@
-
 import os
 import pandas as pd
 from tqdm import tqdm
@@ -8,28 +7,27 @@ from dotenv import load_dotenv
 
 warnings.filterwarnings('ignore')
 
-from src.data_loader import SMSDataLoader
 from src.augmenter import TextAugmenter
 
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-DATA_PATH = "data/raw/sms_spam_indo.csv"
-NUM_VARIATIONS = 4  #Multiplier
 
+DATA_PATH = "data/raw/train_data.csv"
+NUM_VARIATIONS = 3  #Multiplier
 
 MODELS_CONFIG = {
 #    'Gemini_3.5_Flash_Lite': ('gemini', 'gemini-3.5-flash-lite'),
-#    'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Legacy
+   'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Legacy
 #    'GPT_4o_Mini': ('gpt', 'gpt-4o-mini'),
-#    'GPT_4.1': ('gpt', 'gpt-4.1-2025-04-14'),
+   'GPT_4.1': ('gpt', 'gpt-4.1-2025-04-14'),
 #    'GPT_4.1_Nano': ('gpt', 'gpt-4.1-nano'),
 #    'GPT_5_Nano': ('gpt', 'gpt-5-nano'), #GPT versi 5 menggunakan temperatur default dan tidak bisa diubah
 
 ##Open source Ollama Models
-    # 'LLaMA2_7B': ('ollama', 'llama2:7b'),
-    # 'LLaMA3_8B': ('ollama', 'llama3:8b'),
+    'LLaMA2_7B': ('ollama', 'llama2:7b'),
+    'LLaMA3_8B': ('ollama', 'llama3:8b'),
     # 'Qwen3_8B': ('ollama', 'qwen3:8b'),
     # 'Gemma4_e4B': ('ollama', 'gemma4:e4b'),
     # 'Aya_Expanse_8B': ('ollama', 'aya-expanse:8b'),
@@ -56,11 +54,9 @@ def save_txt_log(original_text, synthetic_texts, filepath):
         f.write('\n' + '='*50 + '\n\n')
 
 def main():
-    loader = SMSDataLoader(DATA_PATH)
-    normal_df, spam_df = loader.process()
 
-    #Use .head() function for testing     
-    spam_texts = spam_df['Pesan'].tolist() 
+    raw_df = pd.read_csv(DATA_PATH)
+    raw_df = raw_df[['Kategori', 'Pesan']].dropna()
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
     
@@ -77,8 +73,12 @@ def main():
             log_csv_data = [] 
             txt_log_path = os.path.join(dirs['augmented_log'], f"log_{model_display}_{technique}.txt")
             
-            for original_text in tqdm(spam_texts, desc=f"{model_display} - {technique}"):
+            for index, row in tqdm(raw_df.iterrows(), total=len(raw_df), desc=f"{model_display} - {technique}"):
+                original_text = str(row['Pesan'])
+                label_asli = str(row['Kategori'])
+                
                 prompt = augmenter.get_prompt(technique, original_text)
+                
                 current_paraphrases = []
                 row_log = {'original': original_text}
                 
@@ -94,7 +94,7 @@ def main():
                     
                     if syn_text and syn_text not in current_paraphrases:
                         current_paraphrases.append(syn_text)
-                        synthetic_data.append({'Kategori': 'spam', 'Pesan': syn_text})
+                        synthetic_data.append({'Kategori': label_asli, 'Pesan': syn_text})
                         row_log[f'parafrase_{i+1}'] = syn_text
                     else:
                         row_log[f'parafrase_{i+1}'] = "" 
@@ -113,8 +113,7 @@ def main():
                 file_synth = os.path.join(dirs['synthetic'], f"synthetic_{model_display}_{technique}.csv")
                 synthetic_df.to_csv(file_synth, index=False, quoting=1) 
                 
-                raw_df_cleaned = pd.concat([normal_df[['Kategori', 'Pesan']], spam_df[['Kategori', 'Pesan']]])
-                merged_df = pd.concat([raw_df_cleaned, synthetic_df], ignore_index=True)
+                merged_df = pd.concat([raw_df, synthetic_df], ignore_index=True)
                 
                 file_merged = os.path.join(dirs['merged'], f"merged_{model_display}_{technique}.csv")
                 merged_df.to_csv(file_merged, index=False, quoting=1)
