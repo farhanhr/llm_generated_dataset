@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from src.classifier import FakeNewsClassifier
 
-TIMESTAMP_RUN = "20260905193857"  
+TIMESTAMP_RUN = "20260913182453"  
 TARGET_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/merged/balanced"
 
 TRAIN_BASELINE_PATH = "data/raw/train_data.csv"

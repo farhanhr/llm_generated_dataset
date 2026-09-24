@@ -25,9 +25,9 @@ MODELS_CONFIG = {
 #    'GPT_5_Nano': ('gpt', 'gpt-5-nano'), #GPT versi 5 menggunakan temperatur default dan tidak bisa diubah
 
 ##Open source Ollama Models
-    # 'LLaMA2_7B': ('ollama', 'llama2:7b'),
+    'LLaMA2_7B': ('ollama', 'llama2:7b'),
     # 'LLaMA3_8B': ('ollama', 'llama3:8b'),
-    'Qwen3_8B': ('ollama', 'qwen3:8b'),
+    # 'Qwen3_8B': ('ollama', 'qwen3:8b'),
     # 'Gemma4_e4B': ('ollama', 'gemma4:e4b'),
     # 'Aya_Expanse_8B': ('ollama', 'aya-expanse:8b'),
     # 'Deepseek_r1_8B': ('ollama', 'deepseek-r1:8b'), #Model yang membutuhkan waktu untuk berpikir
@@ -54,7 +54,7 @@ def save_txt_log(original_text, synthetic_texts, filepath):
 
 def main():
 
-    raw_df = pd.read_csv(DATA_PATH)
+    raw_df = pd.read_csv(DATA_PATH).head(2)
     raw_df = raw_df[['Kategori', 'Pesan']].dropna()
     
     augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY, SUMOPOD_API_KEY)
