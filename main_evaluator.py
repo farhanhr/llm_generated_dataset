@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from src.evaluator import TextEvaluator
 
-TIMESTAMP_RUN = "20260905193857" 
+TIMESTAMP_RUN = "20260913182453" 
 TARGET_LOG_FOLDER = f"data/augmented/{TIMESTAMP_RUN}/augmented_log"
 
 def main():
