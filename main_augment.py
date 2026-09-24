@@ -13,22 +13,21 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUMOPOD_API_KEY = os.getenv("SUMOPOD_API_KEY")
 
 DATA_PATH = "data/raw/train_data.csv"
 NUM_VARIATIONS = 3  #Multiplier
 
 MODELS_CONFIG = {
-#    'Gemini_3.5_Flash_Lite': ('gemini', 'gemini-3.5-flash-lite'),
-   'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Legacy
-#    'GPT_4o_Mini': ('gpt', 'gpt-4o-mini'),
-   'GPT_4.1': ('gpt', 'gpt-4.1-2025-04-14'),
-#    'GPT_4.1_Nano': ('gpt', 'gpt-4.1-nano'),
+    # 'Gemini_3.1_Flash-lite': ('sumopod', 'gemini/gemini-3.1-flash-lite'),
+#    'GPT_3.5_Turbo': ('gpt', 'gpt-3.5-turbo'), #Legacy
+#    'GPT_4.1': ('gpt', 'gpt-4.1-2025-04-14'),
 #    'GPT_5_Nano': ('gpt', 'gpt-5-nano'), #GPT versi 5 menggunakan temperatur default dan tidak bisa diubah
 
 ##Open source Ollama Models
-    'LLaMA2_7B': ('ollama', 'llama2:7b'),
-    'LLaMA3_8B': ('ollama', 'llama3:8b'),
-    # 'Qwen3_8B': ('ollama', 'qwen3:8b'),
+    # 'LLaMA2_7B': ('ollama', 'llama2:7b'),
+    # 'LLaMA3_8B': ('ollama', 'llama3:8b'),
+    'Qwen3_8B': ('ollama', 'qwen3:8b'),
     # 'Gemma4_e4B': ('ollama', 'gemma4:e4b'),
     # 'Aya_Expanse_8B': ('ollama', 'aya-expanse:8b'),
     # 'Deepseek_r1_8B': ('ollama', 'deepseek-r1:8b'), #Model yang membutuhkan waktu untuk berpikir
@@ -58,7 +57,7 @@ def main():
     raw_df = pd.read_csv(DATA_PATH)
     raw_df = raw_df[['Kategori', 'Pesan']].dropna()
     
-    augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY)
+    augmenter = TextAugmenter(GEMINI_API_KEY, OPENAI_API_KEY, SUMOPOD_API_KEY)
     
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     base_dir = f"data/augmented/{timestamp}"
@@ -89,6 +88,8 @@ def main():
                         syn_text = augmenter.augment_with_gpt(prompt, api_model_name)
                     elif provider == 'ollama': 
                         syn_text = augmenter.augment_with_ollama(prompt, api_model_name)
+                    elif provider == 'sumopod': 
+                        syn_text = augmenter.augment_with_sumopod(prompt, api_model_name)
                     else: 
                         syn_text = ""
                     
